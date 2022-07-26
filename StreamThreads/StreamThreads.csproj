@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>StreamThreads - parallel processes on single thread</Title>
+    <Authors>MichaelMeling</Authors>
+    <Company>StreamBlocks</Company>
+    <Description>Library for running parallel tasks on a single thread using Iterators. Alternative to using async/await or Task.Run but without needing locks or concurrent collections.</Description>
+    <PackageProjectUrl>https://streamblocks.io/</PackageProjectUrl>
+    <PackageIcon>Icon1024-1024.png</PackageIcon>
+    <PackageId>StreamThreads</PackageId>
+    <Copyright>StreamBlocks 2022</Copyright>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Icon1024-1024.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
