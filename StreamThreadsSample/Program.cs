@@ -1,18 +1,18 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using StreamThreads;
-using StripeSample;
-using static StreamThreads.StreamExtensions;
+    using StreamThreads;
+    using StripeSample;
+    using static StreamThreads.StreamExtensions;
 
-Console.WriteLine("Hello, World!");
+    Console.WriteLine("Hello, World!");
 
-Host host = new Host();
-var state = host.Flash().Await();
+    Host host = new Host();
+    var state = host.Flash().Await();
 
-while (true)
-{
+    while (true)
+    {
     
-    state.Loop();
-    SecondsSinceLast = 0;
+        state.Loop();
+        SecondsSinceLast = 0;
 
-    Thread.Sleep(10);
+        Thread.Sleep(10);
 }
