@@ -5,10 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>StreamThreads - parallel processes on single thread</Title>
+    <Title>StreamThreads - a coroutine library</Title>
     <Authors>MichaelMeling</Authors>
     <Company>StreamBlocks</Company>
-    <Description>Library for running parallel tasks on a single thread using Iterators. Alternative to using async/await or Task.Run but without needing locks or concurrent collections.</Description>
+    <Description>A coroutine library for running parallel tasks on a single thread using Iterators. Alternative to using async/await or Task.Run but without needing locks or concurrent collections.</Description>
     <PackageProjectUrl>https://streamblocks.io/</PackageProjectUrl>
     <PackageIcon>Icon1024-1024.png</PackageIcon>
     <PackageId>StreamThreads</PackageId>
