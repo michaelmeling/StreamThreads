@@ -6,7 +6,7 @@
     Console.WriteLine("Hello, World!");
 
     Host host = new Host();
-    var state = host.Flash().Await();
+    var state = host.StartupState().Await();
 
     while (true)
     {
