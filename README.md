@@ -59,3 +59,7 @@ Finally we have the main loop that makes it all happen. From your form, on a tim
 Lastly, the **SecondsSinceLast** is a **[ThreadStatic]** property that makes it easier during varying loop times to size time-dependent calculations.
 
 	double Delta = SecondsSinceLast * speed;
+
+![This screen shows the sample program running a number of threads simultaneously, where each thread prints a different character.](https://github.com/michaelmeling/StreamThreads/blob/master/sampleimg.PNG?raw=true)
+
+![This image is from the WPF sample of recursive coroutines, showing small boxes slowly spawning on the screen, each doing their own thing.](https://github.com/michaelmeling/StreamThreads/blob/master/sampleimgwpf.PNG?raw=true)
