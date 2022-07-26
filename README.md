@@ -60,6 +60,8 @@ Lastly, the **SecondsSinceLast** is a **[ThreadStatic]** property that makes it 
 
 	double Delta = SecondsSinceLast * speed;
 
+This screen shows the sample program running a number of threads simultaneously, where each thread prints a different character.
 ![This screen shows the sample program running a number of threads simultaneously, where each thread prints a different character.](https://github.com/michaelmeling/StreamThreads/blob/master/sampleimg.PNG?raw=true)
 
+This image is from the WPF sample of recursive coroutines, showing small boxes slowly spawning on the screen, each doing their own thing.
 ![This image is from the WPF sample of recursive coroutines, showing small boxes slowly spawning on the screen, each doing their own thing.](https://github.com/michaelmeling/StreamThreads/blob/master/sampleimgwpf.PNG?raw=true)
