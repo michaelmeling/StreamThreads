@@ -11,9 +11,8 @@
         private object? _state;
 
         internal StreamState? Background { get => _state as StreamState; set { _state = value; StateType = StateTypes.Background; } }
-        internal IEnumerable<StreamState>? OnError { get => _state as IEnumerable<StreamState>; set => _state = value; }
-        internal IEnumerable<StreamState>? StateSwitch { get => _state as IEnumerable<StreamState>; set => _state = value; }
-
+        internal IEnumerable<StreamState>? OnError { get => _state as IEnumerable<StreamState>; set { _state = value; StateType = StateTypes.Error; } }
+        internal IEnumerable<StreamState>? StateSwitch { get => _state as IEnumerable<StreamState>; set { _state = value; StateType = StateTypes.Switch; } }
         public StreamState(Predicate canRun)
         {
             Loop = canRun;

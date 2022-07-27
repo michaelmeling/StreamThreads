@@ -17,7 +17,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/michaelmeling/StreamThreads</RepositoryUrl>
 	<VersionPrefix>2022.7.27</VersionPrefix>
-	<VersionSuffix>100</VersionSuffix>
+	<VersionSuffix>200</VersionSuffix>
+	<Version>$(VersionPrefix).$(VersionSuffix)</Version>
   </PropertyGroup>
 
   <ItemGroup>
