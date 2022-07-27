@@ -43,7 +43,33 @@ The extension methods also allow for easy ways to control what happens to a func
 
 **SwitchOnCondition** causes the function to exit entirely and start a new function. The calling function (parent function) will have no knowledge of this. This can be viewed as "switching state". Since background threads are local to each function, they are all cancelled when this happens. This also includes error handlers.
 
-Finally we have the main loop that makes it all happen. From your form, on a timer, or just straight in a loop as below, define a **StreamState** variable to your function and add **Await()**. Then put a call to Loop every few milliseconds, or however frequent you want your loop to run.
+It is also possible to call **async** functions, as if they were part of the normal StreamThreads execution. Be aware, that these calls will not be terminated when they go out of scope. They live forever, or at least until they stop running by themselves. However, they do run in a separate thread, and so will be "true" multi-threading. Again, they can be called either as **Background()** or **Await()**, but lack the ability to use **Until()**, **While()** or any other iterator based chaining.
+
+        yield return AnotherAsyncProcess().Await(number);
+        
+        private async Task<int> DelayForSomeTimeAsync()
+        {
+            await Task.Delay(2300);
+
+            Console.WriteLine("waited 2.3 secs");
+            return 5;
+        }
+
+Alternatively, there is also a **Lambda** version available.
+
+        yield return Background(c => AnAsyncProcess(c), () => cancel);
+        
+        private void AnAsyncProcess(CancellationToken token)
+        {
+	            ... do some time consuming stuff
+	            
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+        }
+
+Finally we have the main loop that makes it all happen. From your form, on a timer, or just straight in a loop as below, define a **StreamState** variable to your function and add **Await()**. Then put a call to **Loop** every few milliseconds, or however frequent you want your loop to run. Notice how **Loop** somewhat counter-intuitively returns true when it should no longer be called.
 
     using StreamThreads;
     using static StreamThreads.StreamExtensions;
@@ -52,14 +78,24 @@ Finally we have the main loop that makes it all happen. From your form, on a tim
 
     while (true)
     {    
-        state.Loop();
+        if(state.Loop()) break;
         SecondsSinceLast = 0;
         Thread.Sleep(10);
     }
 Lastly, the **SecondsSinceLast** is a **[ThreadStatic]** property that makes it easier during varying loop times to size time-dependent calculations.
 
+    using static StreamThreads.StreamExtensions;
 	double Delta = SecondsSinceLast * speed;
+Don't forget to include the **using static** statement if you want to use **SecondsSinceLast**, **WaitForever**, **OK**, **WaitFor** and other static properties and methods from the StreamThreads library.
 
+
+Return variables and ref parameters are not allowed for iterators, so as a solution StreamThreads contains a small wrapper class **IteratorReturnVariable**, that can be passed as a parameter and populated by the called function.
+
+            IteratorReturnVariable<int> myrefvar = new ();
+            yield return DoSomething(myrefvar).Await();
+            Console.WriteLine(myrefvar);
+
+## Samples
 This screen shows the sample program running a number of threads simultaneously, where each thread prints a different character.
 ![This screen shows the sample program running a number of threads simultaneously, where each thread prints a different character.](https://github.com/michaelmeling/StreamThreads/blob/master/sampleimg.PNG?raw=true)
 

@@ -1,12 +1,14 @@
-﻿using System.Threading;
+﻿using StreamThreads;
+using System.Threading;
+using System.Threading.Channels;
 
 namespace StreamThreads
 {
     public static class StreamExtensions
     {
 
-        public static readonly StreamState OK = new (() => true);
-        public static readonly StreamState WaitForever = new (() => false);
+        public static readonly StreamState OK = new(() => true);
+        public static readonly StreamState WaitForever = new(() => false);
 
         [ThreadStatic]
         private static DateTime? _lastrun;
@@ -137,35 +139,45 @@ namespace StreamThreads
                                 running = itr.MoveNext();
                             }
 
-                            if (!running) return true;
-
-                            if (itr.Current!.HasBackground())
+                            if (!running)
                             {
-                                var b = new BackgroundState()
+                                itr.Current?.Terminate?.Invoke();
+
+                                foreach (var item in BackgroundThreads)
                                 {
-                                    BackgroundLoop = itr.Current!.Backnew
-                                    //,                                    UpdateIterator = itr.Current!.Background!.GetEnumerator()
-                                };
-                                BackgroundThreads.Add(b);
-                                continue;
+                                    item.BackgroundLoop?.Terminate?.Invoke();
+                                }
+
+                                return true;
                             }
 
-                            if (itr.Current!.HasOnError())
+                            switch (itr.Current!.StateType)
                             {
-                                OnError = itr.Current.OnError;
-                                continue;
-                            }
+                                case StreamState.StateTypes.Background:
+                                    var b = new BackgroundState()
+                                    {
+                                        BackgroundLoop = itr.Current!.Background
+                                    };
+                                    BackgroundThreads.Add(b);
+                                    continue;
 
-                            if (itr.Current!.HasStateSwitch())
-                            {
-                                var sm = new BackgroundState()
-                                {
-                                    SwitchState = true,
-                                    UpdateIterator = itr.Current.StateSwitch!.GetEnumerator(),
-                                    Condition = itr.Current.Loop
-                                };
-                                BackgroundThreads.Add(sm);
-                                continue;
+                                case StreamState.StateTypes.Error:
+                                    OnError = itr.Current.OnError;
+                                    continue;
+
+                                case StreamState.StateTypes.Switch:
+                                    var sm = new BackgroundState()
+                                    {
+                                        SwitchState = true,
+                                        UpdateIterator = itr.Current.StateSwitch!.GetEnumerator(),
+                                        Condition = itr.Current.Loop
+                                    };
+                                    BackgroundThreads.Add(sm);
+                                    continue;
+
+                                case StreamState.StateTypes.Normal:
+                                default:
+                                    break;
                             }
 
                             for (int i = 0; i < BackgroundThreads.Count; i++)
@@ -185,22 +197,11 @@ namespace StreamThreads
                                             BackgroundThreads.Clear();
                                             OnError = null;
                                         }
-                                        else if(item.BackgroundLoop != null)
+                                        else if (item.BackgroundLoop != null)
                                         {
                                             if (item.BackgroundLoop.Loop())
                                             {
                                                 BackgroundThreads.RemoveAt(i);
-                                            }
-                                        }
-                                        else if (item.UpdateIterator != null)
-                                        {
-                                            if (item.UpdateIterator.Current == null
-                                                || item.UpdateIterator.Current.Loop())
-                                            {
-                                                if (!item.UpdateIterator.MoveNext())
-                                                {
-                                                    BackgroundThreads.RemoveAt(i--);
-                                                }
                                             }
                                         }
                                     }
@@ -227,7 +228,16 @@ namespace StreamThreads
                         }
                     }
                 }
-            );
+            )
+            {
+                Terminate = () =>
+                {
+                    foreach (var item in BackgroundThreads)
+                    {
+                        item.BackgroundLoop?.Terminate?.Invoke();
+                    }
+                }
+            };
         }
 
         public static void SimulatedError(double probability = 0.1)
@@ -241,8 +251,7 @@ namespace StreamThreads
 
             return new StreamState(() => true)
             {
-                Backnew = c.Await(),
-                Background = c
+                Background = c.Await()
             };
         }
 
@@ -279,5 +288,71 @@ namespace StreamThreads
             return new StreamState(trigger);
         }
 
+        public static StreamState Await(Action<CancellationToken> me, Predicate cancel)
+        {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationToken token = cts.Token;
+
+            if (cancel()) return new StreamState(() => true);
+
+            Task? t = Task.Run(() => me(token), token);
+
+            return new StreamState(() =>
+            {
+                if (t == null) return true;
+
+                if (t.Status != TaskStatus.Running)
+                {
+                    t = null;
+                    return true;
+                }
+
+                if (!cancel()) return false;
+
+                cts.Cancel();
+                return true;
+            })
+            {
+                Terminate = () =>
+                {
+                    cts.Cancel();
+                }
+            };
+        }
+
+        public static StreamState Background(Action<CancellationToken> me, Predicate cancel)
+        {
+            return new StreamState(() => true)
+            {
+                Background = Await(me, cancel)
+            };
+        }
+
+        public static StreamState Await<T>(this Task<T> me, IteratorReturnVariable<T>? retval = null)
+        {
+            return new StreamState(() =>
+            {
+                if (me.Status == TaskStatus.RanToCompletion
+                || me.Status == TaskStatus.Faulted
+                || me.Status == TaskStatus.Canceled)
+                {
+                    if (retval != null)
+                        retval.Value = me.Result;
+
+                    return true;
+                }
+                else
+                    return false;
+            });
+        }
+
+        public static StreamState Background<T>(this Task<T> me, IteratorReturnVariable<T>? retval = null)
+        {
+            return new StreamState(() => true)
+            {
+                Background = Await(me, retval)
+            };
+        }
     }
 }
+

@@ -2,19 +2,24 @@
 {
     public delegate bool Predicate();
 
-    public class StreamState 
+    public class StreamState
     {
+        internal enum StateTypes { Normal, Background, Error, Switch }
         public Predicate Loop;
-        public bool IsRunning;
-        public StreamState? Backnew;
-        public IEnumerable<StreamState>? Background;
-        public IEnumerable<StreamState>? OnError;
-        public IEnumerable<StreamState>? StateSwitch;
+        internal Action? Terminate;
+        internal StateTypes StateType;
+        private object? _state;
+
+        internal StreamState? Background { get => _state as StreamState; set { _state = value; StateType = StateTypes.Background; } }
+        internal IEnumerable<StreamState>? OnError { get => _state as IEnumerable<StreamState>; set => _state = value; }
+        internal IEnumerable<StreamState>? StateSwitch { get => _state as IEnumerable<StreamState>; set => _state = value; }
 
         public StreamState(Predicate canRun)
         {
             Loop = canRun;
-            IsRunning = false;
+            Terminate = null;
+            _state = null;
+            StateType = StateTypes.Normal;
         }
 
         internal bool HasBackground()

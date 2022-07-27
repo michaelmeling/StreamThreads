@@ -6,6 +6,7 @@ namespace StreamThreads
     {
         private T? _value;
         private bool _hasvalue = false;
+
         public T? Value
         {
             get
@@ -31,6 +32,11 @@ namespace StreamThreads
         public static implicit operator T(IteratorReturnVariable<T> v)
         {
             return v.Value!;
+        }
+
+        public override string ToString()
+        {
+            return $"{_value}";
         }
     }
 }

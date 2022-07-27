@@ -1,6 +1,7 @@
 ﻿using StreamThreads;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,13 +20,13 @@ namespace StripeSample
             while (true)
             {
                 Console.Write("O");
-                yield return MakeNoise().Until(()=> secondlightison).Background();
+                yield return MakeNoise().Until(() => secondlightison).Background();
 
                 yield return Sleep(500);
-                
+
                 Console.Write("_");
                 secondlightison = true;
-                yield return Sleep(500);                
+                yield return Sleep(500);
             }
         }
 
@@ -51,11 +52,20 @@ namespace StripeSample
 
         private IEnumerable<StreamState> GetReady()
         {
+            bool cancel = false;
+            yield return Background(c => AnAsyncProcess(c), () => cancel);
+
+            var number = new IteratorReturnVariable<int>();
+            yield return AnotherAsyncProcess().Await(number);
+            Console.WriteLine($"Number was : {number}");
+
             yield return MakeStuff(2, '#').Await();
 
             yield return MakeStuff(22, '?').Until(() => readyforwork).Background();
 
             yield return MakeStuff(4, '@').Await();
+
+            cancel = true;
 
             yield return MakeStuff(6, '!').Await();
 
@@ -88,6 +98,29 @@ namespace StripeSample
         {
             Console.Write("Crashed");
             yield break;
+        }
+
+        private void AnAsyncProcess(CancellationToken token)
+        {
+            var rnd = new Random();
+            for (int i = 0; i < 100000; i++)
+            {
+                Console.ForegroundColor = (ConsoleColor)rnd.Next(1, 15);
+
+                if (token.IsCancellationRequested)
+                {
+                    Console.WriteLine("color change cancelled");
+                    return;
+                }
+            }
+        }
+
+        private async Task<int> AnotherAsyncProcess()
+        {
+            await Task.Delay(2300);
+
+            Console.WriteLine("waited 2.3 secs");
+            return 5;
         }
     }
 }
