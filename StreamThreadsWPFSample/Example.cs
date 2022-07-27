@@ -26,20 +26,35 @@ namespace StreamThreadsWPFSample
             double x = _owner.ActualWidth / 2;
             double y = _owner.ActualHeight / 2;
 
-            yield return MovingBox(4, 3, 0, _owner.ActualWidth / 2, _owner.ActualHeight / 2).Background();
+            yield return MovingBox(40, 5, 0, _owner.ActualWidth / 2, _owner.ActualHeight / 2).Background();
 
             yield return WaitForever;
         }
 
         private IEnumerable<StreamState> MovingBox(int maxspawns, int maxlevel, int level, double x, double y)
         {
+            var aw = _owner.ActualWidth;
+            var ah = _owner.ActualHeight;
+            var bw = 20; // box width
+            var bh = 20; // box height
+
             if (level >= maxlevel) yield break;
 
             var rnd = new Random();
 
-            var box = new Rectangle();
-            box.Width = 20;
-            box.Height = 20;
+            Shape box;
+            switch (rnd.Next(0, 2))
+            {
+                case 0: box = new Rectangle(); break;
+                case 1: box = new Ellipse(); break;
+                case 2: box = new Polygon() { }; break;
+                case 3: box = new Line(); break;
+                default: box = new Rectangle(); break;
+            };
+
+            box.Width = bw;
+            box.Height = bh;
+
             //box.Stroke = new SolidColorBrush(Colors.Black);
             //box.StrokeThickness = 10;
             box.Fill = new SolidColorBrush(Color.FromRgb((byte)rnd.Next(0, 255), (byte)rnd.Next(0, 255), (byte)rnd.Next(0, 255)));
@@ -56,8 +71,8 @@ namespace StreamThreadsWPFSample
                 dy += (rnd.NextDouble() - 0.5) * 5.5;
                 if (x < 0) { dx = Math.Abs(dx); x = 0; }
                 if (y < 0) { dy = Math.Abs(dy); y = 0; }
-                if (x > _owner.ActualWidth - box.Width) { dx = -Math.Abs(dx); x = 0; x = _owner.ActualWidth - box.Width; }
-                if (y > _owner.ActualHeight - box.Height) { dy = -Math.Abs(dy); y = _owner.ActualHeight - box.Height; }
+                if (x > aw - bw) { dx = -Math.Abs(dx); x = 0; x = aw - bw; }
+                if (y > ah - bh) { dy = -Math.Abs(dy); y = ah - bh; }
 
                 x += dx;
                 y += dy;

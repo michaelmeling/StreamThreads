@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using static StreamThreads.StreamExtensions;
 
 namespace StreamThreadsWPFSample
 {
@@ -23,7 +24,7 @@ namespace StreamThreadsWPFSample
     public partial class MainWindow : Window
     {
         private Example mycontrollerexample;
-        private DispatcherTimer timer = new DispatcherTimer();
+        private DispatcherTimer timer = new DispatcherTimer(DispatcherPriority.Render);
 
         public MainWindow()
         {
@@ -32,7 +33,7 @@ namespace StreamThreadsWPFSample
             mycontrollerexample = new Example(this);
             mycontrollerexample.State = mycontrollerexample.StartState().Await();
 
-            timer.Interval = TimeSpan.FromMilliseconds(50);
+            timer.Interval = TimeSpan.FromMilliseconds(30);
             timer.Tick += timer_Tick;
             timer.Start();
         }
@@ -41,8 +42,15 @@ namespace StreamThreadsWPFSample
         {
             if (mycontrollerexample?.State == null) return;
 
-            if (mycontrollerexample!.State!.Loop())
-                timer.Stop();
+            using (var d = Dispatcher.DisableProcessing())
+            {
+                /* your work... Use dispacher.begininvoke... */
+
+                if (mycontrollerexample!.State!.Loop())
+                    timer.Stop();
+            }
+
+            SecondsSinceLast = 0;
         }
     }
 }
