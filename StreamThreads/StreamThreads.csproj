@@ -16,8 +16,8 @@
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/michaelmeling/StreamThreads</RepositoryUrl>
-	<VersionPrefix>2022.7.27</VersionPrefix>
-	<VersionSuffix>200</VersionSuffix>
+	<VersionPrefix>2022.7.28</VersionPrefix>
+	<VersionSuffix>100</VersionSuffix>
 	<Version>$(VersionPrefix).$(VersionSuffix)</Version>
   </PropertyGroup>
 

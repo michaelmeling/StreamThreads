@@ -54,7 +54,8 @@ The extension methods also allow for easy ways to control what happens to a func
 ## async / await
 It is also possible to call **async** functions, as if they were part of the normal StreamThreads execution. Be aware, that these calls will not be terminated when they go out of scope. They live forever, or at least until they stop running by themselves. However, they do run in a separate thread, and so will be "true" multi-threading. Again, they can be called either as **Background()** or **Await()**, but lack the ability to use **Until()**, **While()** or any other iterator based chaining.
 
-        yield return DelayForSomeTimeAsync().Await(number);
+        yield return DelayForSomeTimeAsync().Await(out var number);
+        Console.WriteLine($"Returned value was {number.Value}");
         
         private async Task<int> DelayForSomeTimeAsync()
         {
@@ -64,7 +65,7 @@ It is also possible to call **async** functions, as if they were part of the nor
             return 5;
         }
 
-Alternatively, there is also a **Lambda** version available.
+Alternatively, there is also a **Lambda** version available. which includes a **CancellationToken**.
 
         yield return Background(c => AnAsyncProcess(c), () => cancel);
         
