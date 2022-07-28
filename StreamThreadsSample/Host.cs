@@ -45,7 +45,14 @@ namespace StripeSample
 
             yield return PrintDots(".").Until(() => readyforwork).Background();
 
-            yield return GetReady().Await();
+            yield return GetReady().Background(out var ready);
+
+            yield return ReturnNumbers().Background(out var ret);
+
+
+            yield return WaitFor(() => ready.HasValue());
+            Console.WriteLine($"GetReady returned {ready.Value}");
+            Console.WriteLine($"Random number {ret.Value}");
 
             yield return WaitForever;
         }
@@ -55,9 +62,8 @@ namespace StripeSample
             bool cancel = false;
             yield return Background(c => AnAsyncProcess(c), () => cancel);
 
-            var number = new IteratorReturnVariable<int>();
-            yield return AnotherAsyncProcess().Await(number);
-            Console.WriteLine($"Number was : {number}");
+            yield return AnotherAsyncProcess().Await(out var number);
+            Console.WriteLine($"AnotherAsyncProcess said : {number}");
 
             yield return MakeStuff(2, '#').Await();
 
@@ -70,6 +76,8 @@ namespace StripeSample
             yield return MakeStuff(6, '!').Await();
 
             readyforwork = true;
+
+            yield return Return(5000);
         }
 
         private IEnumerable<StreamState> MakeStuff(int strength, char product)
@@ -98,6 +106,15 @@ namespace StripeSample
         {
             Console.Write("Crashed");
             yield break;
+        }
+
+        private IEnumerable<StreamState<int>> ReturnNumbers()
+        {
+            var rnd = new Random();
+            while (true)
+            {
+                yield return Return(rnd.Next(0, 100));
+            }
         }
 
         private void AnAsyncProcess(CancellationToken token)

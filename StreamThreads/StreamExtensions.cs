@@ -36,7 +36,6 @@ namespace StreamThreads
                 if (condition()) yield break;
             }
         }
-
         public static IEnumerable<StreamState> While(this IEnumerable<StreamState> me, Predicate condition)
         {
             var wait = new StreamState(() => true);
@@ -55,7 +54,6 @@ namespace StreamThreads
                 }
             }
         }
-
         public static IEnumerable<StreamState> ExitOnError(this IEnumerable<StreamState> me)
         {
             var itr = me.GetEnumerator();
@@ -75,7 +73,6 @@ namespace StreamThreads
 
             }
         }
-
         public static IEnumerable<StreamState> ResumeOnError(this IEnumerable<StreamState> me)
         {
             var itr = me.GetEnumerator();
@@ -90,7 +87,6 @@ namespace StreamThreads
                 yield return itr.Current;
             }
         }
-
         public static IEnumerable<StreamState> RestartOnError(this IEnumerable<StreamState> me)
         {
             int maxretries = 1;
@@ -116,8 +112,75 @@ namespace StreamThreads
 
             }
         }
-
         public static StreamState Await(this IEnumerable<StreamState> c)
+        {
+            return c.AwaitPrivate(null);
+        }
+        public static StreamState Await(Action<CancellationToken> me, Predicate cancel)
+        {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationToken token = cts.Token;
+
+            if (cancel()) return new StreamState(() => true);
+
+            Task? t = Task.Run(() => me(token), token);
+
+            return new StreamState(() =>
+            {
+                if (t == null) return true;
+
+                if (t.Status != TaskStatus.Running)
+                {
+                    t = null;
+                    return true;
+                }
+
+                if (!cancel()) return false;
+
+                cts.Cancel();
+                return true;
+            })
+            {
+                Terminate = () =>
+                {
+                    cts.Cancel();
+                }
+            };
+        }
+        public static StreamState Await(this IEnumerable<StreamState> c, out IteratorReturnVariable returnvalue)
+        {
+            returnvalue = new IteratorReturnVariable() { IteratorState = IteratorStates.Running };
+            return c.AwaitPrivate(returnvalue);
+        }
+        public static StreamState Await<T>(this IEnumerable<StreamState> c, out IteratorReturnVariable<T> returnvalue)
+        {
+            returnvalue = new IteratorReturnVariable<T>() { IteratorState = IteratorStates.Running };
+            return c.AwaitPrivate(returnvalue);
+        }
+        public static StreamState Await<T>(this Task<T> me, out IteratorReturnVariable<T>? retval)
+        {
+            var tmp = new IteratorReturnVariable<T>();
+            retval = tmp;
+            return me.AwaitPrivate(tmp);
+
+        }
+        private static StreamState AwaitPrivate<T>(this Task<T> me, IteratorReturnVariable<T> tmp)
+        {
+            return new StreamState(() =>
+            {
+                if (me.Status == TaskStatus.RanToCompletion
+                || me.Status == TaskStatus.Faulted
+                || me.Status == TaskStatus.Canceled)
+                {
+                    tmp.Value = me.Result;
+
+                    return true;
+                }
+                else
+                    return false;
+            });
+        }
+        private static StreamState AwaitPrivate(this IEnumerable<StreamState> c, IteratorReturnVariable? returnvalue)
         {
             var itr = c.GetEnumerator();
             List<BackgroundState> BackgroundThreads = new();
@@ -139,6 +202,7 @@ namespace StreamThreads
                                 running = itr.MoveNext();
                             }
 
+                        exitfunction:
                             if (!running)
                             {
                                 itr.Current?.Terminate?.Invoke();
@@ -148,12 +212,14 @@ namespace StreamThreads
                                     item.BackgroundLoop?.Terminate?.Invoke();
                                 }
 
+                                if (returnvalue != null)
+                                    returnvalue.IteratorState = IteratorStates.Ended;
                                 return true;
                             }
 
                             switch (itr.Current!.StateType)
                             {
-                                case StreamState.StateTypes.Background:
+                                case StateTypes.Background:
                                     var b = new BackgroundState()
                                     {
                                         BackgroundLoop = itr.Current!.Background
@@ -161,11 +227,11 @@ namespace StreamThreads
                                     BackgroundThreads.Add(b);
                                     continue;
 
-                                case StreamState.StateTypes.Error:
+                                case StateTypes.Error:
                                     OnError = itr.Current.OnError;
                                     continue;
 
-                                case StreamState.StateTypes.Switch:
+                                case StateTypes.Switch:
                                     var sm = new BackgroundState()
                                     {
                                         SwitchState = true,
@@ -175,7 +241,14 @@ namespace StreamThreads
                                     BackgroundThreads.Add(sm);
                                     continue;
 
-                                case StreamState.StateTypes.Normal:
+                                case StateTypes.Return:
+                                    if (returnvalue != null)
+                                        returnvalue.Value = itr.Current.ReturnValue;
+
+                                    running = false;
+                                    goto exitfunction;
+
+                                case StateTypes.Normal:
                                 default:
                                     break;
                             }
@@ -215,8 +288,10 @@ namespace StreamThreads
 
                             return false;
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
+                            Console.WriteLine(e.StackTrace);
+
                             if (OnError != null)
                             {
                                 itr = OnError.GetEnumerator();
@@ -224,7 +299,11 @@ namespace StreamThreads
                                 OnError = null;
                             }
                             else
+                            {
+                                if (returnvalue != null)
+                                    returnvalue.IteratorState = IteratorStates.Faulted;
                                 throw;
+                            }
                         }
                     }
                 }
@@ -239,22 +318,42 @@ namespace StreamThreads
                 }
             };
         }
-
-        public static void SimulatedError(double probability = 0.1)
-        {
-            if (new Random().NextDouble() > 1 - probability) throw new Exception("Simulated Error");
-        }
-
         public static StreamState Background(this IEnumerable<StreamState> c)
+        {
+            return c.Background(out var notused);
+        }
+        public static StreamState Background(this IEnumerable<StreamState> c, out IteratorReturnVariable returnvalue)
         {
             IEnumerator<StreamState> itr = c.GetEnumerator();
 
             return new StreamState(() => true)
             {
-                Background = c.Await()
+                Background = c.Await(out returnvalue)
             };
         }
+        public static StreamState Background<T>(this IEnumerable<StreamState<T>> c, out IteratorReturnVariable<T> returnvalue)
+        {
+            IEnumerator<StreamState<T>> itr = c.GetEnumerator();
 
+            return new StreamState<T>(() => true)
+            {
+                Background = c.Await<T>(out returnvalue)
+            };
+        }
+        public static StreamState Background(Action<CancellationToken> me, Predicate cancel)
+        {
+            return new StreamState(() => true)
+            {
+                Background = Await(me, cancel)
+            };
+        }
+        public static StreamState Background<T>(this Task<T> me, out IteratorReturnVariable<T>? retval)
+        {
+            return new StreamState(() => true)
+            {
+                Background = Await(me, out retval)
+            };
+        }
         public static StreamState OnError(this IEnumerable<StreamState> c)
         {
             IEnumerator<StreamState> itr = c.GetEnumerator();
@@ -264,7 +363,6 @@ namespace StreamThreads
                 OnError = c
             };
         }
-
         public static StreamState SwitchOnCondition(this IEnumerable<StreamState> c, Predicate condition)
         {
             IEnumerator<StreamState> itr = c.GetEnumerator();
@@ -275,84 +373,34 @@ namespace StreamThreads
                 StateSwitch = c
             };
         }
-
+        public static StreamState Return(dynamic returnvalue)
+        {
+            return new StreamState(() => true)
+            {
+                ReturnValue = returnvalue
+            };
+        }
+        public static StreamState<T> Return<T>(T returnvalue)
+        {
+            return new StreamState<T>(() => true)
+            {
+                ReturnValue = returnvalue
+            };
+        }
         public static StreamState Sleep(int millis)
         {
             var t = DateTime.Now + TimeSpan.FromMilliseconds(millis);
 
             return new StreamState(() => DateTime.Now > t);
         }
-
         public static StreamState WaitFor(Predicate trigger)
         {
             return new StreamState(trigger);
         }
 
-        public static StreamState Await(Action<CancellationToken> me, Predicate cancel)
+        public static void SimulatedError(double probability = 0.1)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            CancellationToken token = cts.Token;
-
-            if (cancel()) return new StreamState(() => true);
-
-            Task? t = Task.Run(() => me(token), token);
-
-            return new StreamState(() =>
-            {
-                if (t == null) return true;
-
-                if (t.Status != TaskStatus.Running)
-                {
-                    t = null;
-                    return true;
-                }
-
-                if (!cancel()) return false;
-
-                cts.Cancel();
-                return true;
-            })
-            {
-                Terminate = () =>
-                {
-                    cts.Cancel();
-                }
-            };
-        }
-
-        public static StreamState Background(Action<CancellationToken> me, Predicate cancel)
-        {
-            return new StreamState(() => true)
-            {
-                Background = Await(me, cancel)
-            };
-        }
-
-        public static StreamState Await<T>(this Task<T> me, IteratorReturnVariable<T>? retval = null)
-        {
-            return new StreamState(() =>
-            {
-                if (me.Status == TaskStatus.RanToCompletion
-                || me.Status == TaskStatus.Faulted
-                || me.Status == TaskStatus.Canceled)
-                {
-                    if (retval != null)
-                        retval.Value = me.Result;
-
-                    return true;
-                }
-                else
-                    return false;
-            });
-        }
-
-        public static StreamState Background<T>(this Task<T> me, IteratorReturnVariable<T>? retval = null)
-        {
-            return new StreamState(() => true)
-            {
-                Background = Await(me, retval)
-            };
+            if (new Random().NextDouble() > 1 - probability) throw new Exception("Simulated Error");
         }
     }
 }
-
