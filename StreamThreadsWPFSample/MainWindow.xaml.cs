@@ -1,5 +1,6 @@
 ﻿using StreamThreads;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 using static StreamThreads.StreamExtensions;
@@ -11,6 +12,7 @@ namespace StreamThreadsWPFSample
     /// </summary>
     public partial class MainWindow : Window
     {
+        internal int threads;
         private Example mycontrollerexample;
         private DispatcherTimer timer = new DispatcherTimer(DispatcherPriority.Render);
 
@@ -34,8 +36,13 @@ namespace StreamThreadsWPFSample
             {
                 /* your work... Use dispacher.begininvoke... */
 
+                Stopwatch sw = Stopwatch.StartNew();
                 if (mycontrollerexample!.State!.Loop())
                     timer.Stop();
+
+                sw.Stop();
+                txtfps.Text = (10000000.0 / sw.ElapsedTicks).ToString("N2");
+                txtthreads.Text = threads.ToString("N0");
             }
 
             SecondsSinceLast = 0;

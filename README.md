@@ -140,6 +140,8 @@ In addition to the return value itself, the **IteratorReturnVariable** contains 
             
             yield return WaitFor(() => !ready.IsRunning());
 
+## Performance
+At a very rough estimate, each function takes 1 tick, or in other words 1ms per 10,000 threads. This corresponds to a frame rate of appx 20fps for 500,000 threads. This was tested on a recursive  function with background processes, similar to a tree structure with a 1000 layers. The deeper the call hierarchy, the lower the performance due to StreamThreads having to recurse the call stack on every loop. Bear in mind, this does not include your code, it only includes the overhead of StreamThreads' internal house keeping.
 
 ## Samples
 This screen shows the sample program running a number of threads simultaneously, where some threads print a different character, others change the color, and a few print out computational results.

@@ -9,5 +9,9 @@
         Background="Black">
     <Grid>
         <Canvas x:Name="scene"/>
+        <StackPanel>
+            <TextBlock x:Name="txtfps" Foreground="White" Text="ticks per frame"/>
+            <TextBlock x:Name="txtthreads" Foreground="White" Text="threads"/>
+        </StackPanel>
     </Grid>
 </Window>
