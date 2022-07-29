@@ -149,15 +149,15 @@ namespace StreamThreads
         }
         public static StreamState Await(this IEnumerable<StreamState> c, out IteratorReturnVariable returnvalue)
         {
-            returnvalue = new IteratorReturnVariable() { IteratorState = IteratorStates.Running };
+            returnvalue = new IteratorReturnVariable();
             return c.AwaitPrivate(returnvalue);
         }
         public static StreamState Await<T>(this IEnumerable<StreamState> c, out IteratorReturnVariable<T> returnvalue)
         {
-            returnvalue = new IteratorReturnVariable<T>() { IteratorState = IteratorStates.Running };
+            returnvalue = new IteratorReturnVariable<T>();
             return c.AwaitPrivate(returnvalue);
         }
-        public static StreamState Await<T>(this Task<T> me, out IteratorReturnVariable<T>? retval)
+        public static StreamState Await<T>(this Task<T> me, out IteratorReturnVariable<T> retval)
         {
             var tmp = new IteratorReturnVariable<T>();
             retval = tmp;
@@ -166,18 +166,35 @@ namespace StreamThreads
         }
         private static StreamState AwaitPrivate<T>(this Task<T> me, IteratorReturnVariable<T> tmp)
         {
+            tmp.IteratorState = IteratorStates.Running;
+
             return new StreamState(() =>
             {
-                if (me.Status == TaskStatus.RanToCompletion
-                || me.Status == TaskStatus.Faulted
-                || me.Status == TaskStatus.Canceled)
+                switch (me.Status)
                 {
-                    tmp.Value = me.Result;
-
-                    return true;
+                    case TaskStatus.RanToCompletion:
+                        tmp.IteratorState = IteratorStates.Ended;
+                        break;
+                    case TaskStatus.Canceled:
+                        tmp.IteratorState = IteratorStates.Terminated;
+                        break;
+                    case TaskStatus.Faulted:
+                        tmp.IteratorState = IteratorStates.Faulted;
+                        break;
+                    case TaskStatus.Created:
+                    case TaskStatus.WaitingForActivation:
+                    case TaskStatus.WaitingToRun:
+                    case TaskStatus.Running:
+                    case TaskStatus.WaitingForChildrenToComplete:
+                    default:
+                        break;
                 }
-                else
+
+                if (tmp.IteratorState == IteratorStates.Running)
                     return false;
+
+                tmp.Value = me.Result;
+                return true;
             });
         }
         private static StreamState AwaitPrivate(this IEnumerable<StreamState> c, IteratorReturnVariable? returnvalue)
@@ -185,6 +202,9 @@ namespace StreamThreads
             var itr = c.GetEnumerator();
             List<BackgroundState> BackgroundThreads = new();
             IEnumerable<StreamState>? OnError = null;
+
+            if (returnvalue != null)
+                returnvalue.IteratorState = IteratorStates.Running;
 
             return new StreamState(() =>
                 {
@@ -347,7 +367,7 @@ namespace StreamThreads
                 Background = Await(me, cancel)
             };
         }
-        public static StreamState Background<T>(this Task<T> me, out IteratorReturnVariable<T>? retval)
+        public static StreamState Background<T>(this Task<T> me, out IteratorReturnVariable<T> retval)
         {
             return new StreamState(() => true)
             {

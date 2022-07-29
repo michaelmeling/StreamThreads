@@ -39,7 +39,10 @@ namespace StreamThreads
         {
             return $"{_value}";
         }
-
+        public StreamState Await()
+        {
+            return new StreamState(() => !(IteratorState == IteratorStates.Inactive || IteratorState == IteratorStates.Running));
+        }
     }
 
     public class IteratorReturnVariable<T> : IteratorReturnVariable

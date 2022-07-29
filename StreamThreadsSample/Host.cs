@@ -50,7 +50,7 @@ namespace StripeSample
             yield return ReturnNumbers().Background(out var ret);
 
 
-            yield return WaitFor(() => ready.HasValue());
+            yield return ready.Await();
             Console.WriteLine($"GetReady returned {ready.Value}");
             Console.WriteLine($"Random number {ret.Value}");
 
@@ -62,7 +62,8 @@ namespace StripeSample
             bool cancel = false;
             yield return Background(c => AnAsyncProcess(c), () => cancel);
 
-            yield return AnotherAsyncProcess().Await(out var number);
+            yield return AnotherAsyncProcess().Background(out var number);
+            yield return number.Await();
             Console.WriteLine($"AnotherAsyncProcess said : {number}");
 
             yield return MakeStuff(2, '#').Await();

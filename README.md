@@ -143,8 +143,12 @@ StreamThreads includes generic versions of Await() and Background() which allows
 Notice the IEnumerable<StreamState<**int**\>>.
 
 ## Return variable as status monitor
-In addition to the return value itself, the **IteratorReturnVariable** contains a few fields for monitoring a background tasks status, such as **HasEnded**, **WasTerminated**, **IsRunning** and **Faulted**. 
+In addition to the return value itself, the **IteratorReturnVariable** contains a few fields for monitoring a background tasks status, such as **Await()**, **HasEnded**, **WasTerminated**, **IsRunning** and **Faulted**. 
 
+
+            yield return ready.Await();
+
+            // alternatively
             yield return WaitFor(() => ready.HasValue());
             
             yield return WaitFor(() => !ready.IsRunning());
