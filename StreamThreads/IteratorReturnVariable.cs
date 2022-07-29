@@ -41,7 +41,7 @@ namespace StreamThreads
         }
         public StreamState Await()
         {
-            return new StreamState(() => !(IteratorState == IteratorStates.Inactive || IteratorState == IteratorStates.Running));
+            return new StreamStateLambda(() => !(IteratorState == IteratorStates.Inactive || IteratorState == IteratorStates.Running));
         }
     }
 

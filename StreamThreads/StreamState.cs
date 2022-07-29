@@ -5,30 +5,64 @@
 
     public class StreamState
     {
-        public Predicate Loop;
-        internal Action? Terminate;
-        internal StateTypes StateType;
-        private object? _state;
+        public virtual bool Loop() => true;
 
-        internal StreamState? Background { get => _state as StreamState; set { _state = value; StateType = StateTypes.Background; } }
-        internal IEnumerable<StreamState>? OnError { get => _state as IEnumerable<StreamState>; set { _state = value; StateType = StateTypes.Error; } }
-        internal IEnumerable<StreamState>? StateSwitch { get => _state as IEnumerable<StreamState>; set { _state = value; StateType = StateTypes.Switch; } }
-        internal dynamic? ReturnValue { get => _state; set { _state = value; StateType = StateTypes.Return; } }
-        public StreamState(Predicate canRun)
+        public virtual void Terminate()
         {
-            Loop = canRun;
-            Terminate = null;
-            _state = null;
-            StateType = StateTypes.Normal;
+
         }
 
+        internal virtual StateTypes StateType => StateTypes.Normal;
     }
 
     public class StreamState<T> : StreamState
     {
-        public StreamState(Predicate canRun) : base(canRun)
+
+    }
+
+    public class StreamStateAsyncTask<T> : StreamState
+    {
+        private readonly Task<T> me;
+        private readonly IteratorReturnVariable<T> tmp;
+
+        public StreamStateAsyncTask(Task<T> me, IteratorReturnVariable<T> tmp)
         {
+            this.me = me;
+            this.tmp = tmp;
+
+            tmp.IteratorState = IteratorStates.Running;
         }
+
+        public override bool Loop()
+        {
+            switch (me.Status)
+            {
+                case TaskStatus.RanToCompletion:
+                    tmp.IteratorState = IteratorStates.Ended;
+                    break;
+                case TaskStatus.Canceled:
+                    tmp.IteratorState = IteratorStates.Terminated;
+                    break;
+                case TaskStatus.Faulted:
+                    tmp.IteratorState = IteratorStates.Faulted;
+                    break;
+                case TaskStatus.Created:
+                case TaskStatus.WaitingForActivation:
+                case TaskStatus.WaitingToRun:
+                case TaskStatus.Running:
+                case TaskStatus.WaitingForChildrenToComplete:
+                default:
+                    break;
+            }
+
+            if (tmp.IteratorState == IteratorStates.Running)
+                return false;
+
+            tmp.Value = me.Result;
+            return true;
+
+        }
+
     }
 
 }

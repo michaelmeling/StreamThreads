@@ -109,7 +109,7 @@ namespace StripeSample
             yield break;
         }
 
-        private IEnumerable<StreamState<int>> ReturnNumbers()
+        private IEnumerable<StreamStateReturn<int>> ReturnNumbers()
         {
             var rnd = new Random();
             while (true)

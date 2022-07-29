@@ -1,14 +1,12 @@
 ﻿namespace StreamThreads
 {
-    public class BackgroundState
+    internal class BackgroundState
     {
-        public bool Enabled = true;
-        public Predicate? Condition;
-        public Action? UpdateAction;
-        public IEnumerator<StreamState>? UpdateIterator;
-        public bool KeepSubStates;
-        public bool Unchecked;
+        internal bool Enabled = true;
         internal bool SwitchState;
+        internal Action? Lambda;
+        internal Predicate? Condition;
         internal StreamState? BackgroundLoop;
+        internal IEnumerator<StreamState>? SwitchFunction;
     }
 }
