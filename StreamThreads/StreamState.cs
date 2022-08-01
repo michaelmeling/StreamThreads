@@ -1,7 +1,9 @@
 ﻿namespace StreamThreads
 {
     public delegate bool Predicate();
-    internal enum StateTypes { Normal, Background, Error, Switch, Return }
+    internal enum StateTypes { Normal, Background, Error, Switch, Return,
+        Continue
+    }
 
     public class StreamState
     {

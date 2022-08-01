@@ -146,7 +146,7 @@ namespace StreamThreads
         }
         public static StreamStateBackground Background<T>(this IEnumerable<StreamState<T>> c, out IteratorReturnVariable<T> returnvalue)
         {
-            return new StreamStateBackground(c.Await<T>(out returnvalue));            
+            return new StreamStateBackground(c.Await<T>(out returnvalue));
         }
         public static StreamState Background(Action<CancellationToken> me, Predicate cancel)
         {
@@ -166,7 +166,7 @@ namespace StreamThreads
         }
         public static StreamStateReturn Return(dynamic returnvalue)
         {
-            return new StreamStateReturn(returnvalue);            
+            return new StreamStateReturn(returnvalue);
         }
         public static StreamStateReturn<T> Return<T>(T returnvalue)
         {
@@ -180,7 +180,18 @@ namespace StreamThreads
         }
         public static StreamState WaitFor(Predicate trigger)
         {
-            return new StreamStateLambda(trigger);
+            if (trigger())
+                return new StreamStateContinue();
+            else
+                return new StreamStateLambda(trigger);
+        }
+
+        public static StreamState<T> WaitFor<T>(Predicate trigger)
+        {
+            if (trigger())
+                return new StreamStateContinue<T>();
+            else
+                return new StreamStateLambda<T>(trigger);
         }
 
         public static void SimulatedError(double probability = 0.1)

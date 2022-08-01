@@ -3,6 +3,8 @@
 
     public class StreamStateAwait : StreamState
     {
+        internal override StateTypes StateType => StateTypes.Continue;
+
         public IteratorReturnVariable? ReturnValue;
         internal IEnumerator<StreamState> Iterator;
         internal IEnumerable<StreamState>? ErrorHandler;
@@ -24,14 +26,17 @@
             {
                 try
                 {
+                    bool continueonce = false;
                     bool running = true;
                     if (Iterator.Current == null)
                     {
                         running = Iterator.MoveNext();
+                        continueonce = running && Iterator.Current!.StateType == StateTypes.Continue;
                     }
                     else if (Iterator.Current.Loop())
                     {
                         running = Iterator.MoveNext();
+                        continueonce = running && Iterator.Current!.StateType == StateTypes.Continue;
                     }
 
                 exitfunction:
@@ -51,6 +56,11 @@
 
                     switch (Iterator.Current!.StateType)
                     {
+                        case StateTypes.Continue:
+                            if (continueonce)
+                                continue;
+                            else
+                                break;
                         case StateTypes.Error:
                             ErrorHandler = ((StreamStateError)Iterator.Current).OnError;
                             continue;
@@ -76,7 +86,8 @@
 
                         case StateTypes.Return:
                             if (ReturnValue != null)
-                                ReturnValue.Value = ((StreamStateReturn)Iterator.Current).Return;
+
+                                ReturnValue.Value = ((IStreamStateReturn)Iterator.Current).GetValue();
 
                             running = false;
                             goto exitfunction;
@@ -138,7 +149,7 @@
                     }
                 }
             }
-           
+
         }
         public override void Terminate()
         {

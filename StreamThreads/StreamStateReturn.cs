@@ -1,9 +1,15 @@
 ﻿namespace StreamThreads
 {
-    public class StreamStateReturn : StreamState
+    public interface IStreamStateReturn
     {
-        public virtual dynamic? Return { get => _value; set => _value = value; }
-        private dynamic? _value;
+        dynamic? GetValue();
+    }
+
+    public class StreamStateReturn : StreamState, IStreamStateReturn
+    {
+        internal override StateTypes StateType => StateTypes.Return;
+
+        public dynamic? Return;
 
         public StreamStateReturn()
         {
@@ -12,19 +18,33 @@
 
         public StreamStateReturn(dynamic ret)
         {
-            _value = ret;
+            Return = ret;
         }
 
-        internal override StateTypes StateType => StateTypes.Return;
+        public dynamic? GetValue()
+        {
+            return Return;
+        }
     }
 
-    public class StreamStateReturn<T> : StreamStateReturn
+    public class StreamStateReturn<T> : StreamState<T>, IStreamStateReturn
     {
-        public override dynamic? Return { get => _value; set => _value = value; }
-        private T? _value;
+        internal override StateTypes StateType => StateTypes.Return;
+
+        public T? Return;
+
+        public StreamStateReturn()
+        {
+        }
+
         public StreamStateReturn(T ret)
         {
-            _value = ret;
+            Return = ret;
+        }
+
+        public dynamic? GetValue()
+        {
+            return Return;
         }
     }
 
