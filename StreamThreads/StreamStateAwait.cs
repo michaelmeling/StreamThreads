@@ -1,14 +1,22 @@
 ﻿namespace StreamThreads
 {
 
+    public class StreamStateAwait<T> : StreamStateAwait, StreamState<T>
+    {
+        public StreamStateAwait(IEnumerable<StreamState> c, IteratorReturnVariable? returnvalue) : base(c, returnvalue)
+        {
+        }
+    }
+
     public class StreamStateAwait : StreamState
     {
-        internal override StateTypes StateType => StateTypes.Continue;
+        public StateTypes StateType { get; set; } = StateTypes.Continue;
 
         public IteratorReturnVariable? ReturnValue;
         internal IEnumerator<StreamState> Iterator;
         internal IEnumerable<StreamState>? ErrorHandler;
         internal List<BackgroundState> BackgroundThreads = new();
+
 
         public StreamStateAwait(IEnumerable<StreamState> c, IteratorReturnVariable? returnvalue) : base()
         {
@@ -20,7 +28,7 @@
                 ReturnValue!.IteratorState = IteratorStates.Running;
         }
 
-        public override bool Loop()
+        public bool Loop()
         {
             while (true)
             {
@@ -87,7 +95,7 @@
                         case StateTypes.Return:
                             if (ReturnValue != null)
 
-                                ReturnValue.Value = ((IStreamStateReturn)Iterator.Current).GetValue();
+                                ReturnValue.Value = ((StreamStateReturn)Iterator.Current).Return;
 
                             running = false;
                             goto exitfunction;
@@ -109,7 +117,7 @@
 
                                 if (item.SwitchState)
                                 {
-                                    Iterator = item.SwitchFunction!;
+                                    Iterator = ((BackgroundState)item).SwitchFunction!;
                                     BackgroundThreads.Clear();
                                     ErrorHandler = null;
                                 }
@@ -151,7 +159,7 @@
             }
 
         }
-        public override void Terminate()
+        public void Terminate()
         {
             foreach (var item in BackgroundThreads)
             {
@@ -159,13 +167,4 @@
             }
         }
     }
-
-    public class StreamStateAwait<T> : StreamStateAwait
-    {
-        public StreamStateAwait(IEnumerable<StreamState<T>> c, IteratorReturnVariable<T> returnvalue) : base(c, returnvalue)
-        {
-        }
-
-    }
-
 }

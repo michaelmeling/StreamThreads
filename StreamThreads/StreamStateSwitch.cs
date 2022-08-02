@@ -1,5 +1,12 @@
 ﻿namespace StreamThreads
 {
+    public class StreamStateSwitch<T> : StreamStateSwitch, StreamState<T>
+    {
+        public StreamStateSwitch(IEnumerable<StreamState<T>> onSwitch, Predicate condition) : base(onSwitch, condition)
+        {
+        }
+    }
+
     public class StreamStateSwitch : StreamState
     {
         public IEnumerable<StreamState> OnSwitch;
@@ -11,7 +18,16 @@
             Condition = condition;
         }
 
-        internal override StateTypes StateType => StateTypes.Switch;
+        public StateTypes StateType { get; set; } = StateTypes.Switch;
+
+        public bool Loop()
+        {
+            return true;
+        }
+
+        public void Terminate()
+        {
+        }
     }
 
 }

@@ -4,7 +4,7 @@ namespace StreamThreads
 {
     public enum IteratorStates { Inactive, Running, Ended, Terminated, Faulted }
 
-    public class IteratorReturnVariable
+    public class IteratorReturnVariable : IIteratorReturnVariable
     {
         private dynamic? _value;
         private bool _hasvalue = false;
@@ -43,19 +43,15 @@ namespace StreamThreads
         {
             return new StreamStateLambda(() => !(IteratorState == IteratorStates.Inactive || IteratorState == IteratorStates.Running));
         }
-    }
 
-    public class IteratorReturnVariable<T> : IteratorReturnVariable
+        public StreamState<T> Await<T>()
+        {
+            return new StreamStateLambda<T>(() => !(IteratorState == IteratorStates.Inactive || IteratorState == IteratorStates.Running));
+        }
+
+    }
+    public class IteratorReturnVariable<T> : IteratorReturnVariable, IIteratorReturnVariable<T>
     {
-        public new T? Value
-        {
-            get => (T?)base.Value;
-            set => base.Value = value;
-        }
-
-        public static implicit operator T(IteratorReturnVariable<T> v)
-        {
-            return v.Value!;
-        }
     }
+
 }

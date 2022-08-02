@@ -1,13 +1,15 @@
 ﻿namespace StreamThreads
 {
-    public interface IStreamStateReturn
+    public class StreamStateReturn<T> : StreamStateReturn, StreamState<T>
     {
-        dynamic? GetValue();
+        public StreamStateReturn(T ret) : base(ret)
+        {
+        }
     }
 
-    public class StreamStateReturn : StreamState, IStreamStateReturn
+    public class StreamStateReturn : StreamState
     {
-        internal override StateTypes StateType => StateTypes.Return;
+        public StateTypes StateType { get; set; } = StateTypes.Return;
 
         public dynamic? Return;
 
@@ -16,37 +18,18 @@
 
         }
 
-        public StreamStateReturn(dynamic ret)
+        public StreamStateReturn(dynamic? ret)
         {
             Return = ret;
         }
 
-        public dynamic? GetValue()
+        public bool Loop()
         {
-            return Return;
+            return true;
+        }
+
+        public void Terminate()
+        {
         }
     }
-
-    public class StreamStateReturn<T> : StreamState<T>, IStreamStateReturn
-    {
-        internal override StateTypes StateType => StateTypes.Return;
-
-        public T? Return;
-
-        public StreamStateReturn()
-        {
-        }
-
-        public StreamStateReturn(T ret)
-        {
-            Return = ret;
-        }
-
-        public dynamic? GetValue()
-        {
-            return Return;
-        }
-    }
-
-
 }

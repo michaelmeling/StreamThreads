@@ -1,11 +1,19 @@
 ﻿namespace StreamThreads
 {
+    public class StreamStateAsyncLambda<T> : StreamStateAsyncLambda, StreamState<T>
+    {
+        public StreamStateAsyncLambda(Action<CancellationToken> lambda, Predicate cancel) : base(lambda, cancel)
+        {
+        }
+    }
     public class StreamStateAsyncLambda : StreamState
     {
         private readonly CancellationTokenSource cts;
         private readonly CancellationToken token;
         private Task? _task;
         private readonly Predicate _cancel;
+
+        public StateTypes StateType { get; set; } = StateTypes.Normal;
 
         public StreamStateAsyncLambda(Action<CancellationToken> lambda, Predicate cancel)
         {
@@ -17,7 +25,7 @@
             _task = Task.Run(() => lambda(token), token);
         }
 
-        public override bool Loop()
+        public bool Loop()
         {
             if (_task == null) return true;
 
@@ -33,7 +41,7 @@
             return true;
         }
 
-        public override void Terminate()
+        public void Terminate()
         {
             cts.Cancel();
         }

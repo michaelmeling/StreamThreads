@@ -57,24 +57,24 @@ namespace StripeSample
             yield return WaitForever;
         }
 
-        private IEnumerable<StreamState> GetReady()
+        private IEnumerable<StreamState<int>> GetReady()
         {
             bool cancel = false;
-            yield return Background(c => AnAsyncProcess(c), () => cancel);
+            yield return Background<int>(c => AnAsyncProcess(c), () => cancel);
 
-            yield return AnotherAsyncProcess().Background(out var number);
-            yield return number.Await();
+            yield return AnotherAsyncProcess().Background<int, int>(out var number);
+            yield return number.Await<int>();
             Console.WriteLine($"AnotherAsyncProcess said : {number}");
 
-            yield return MakeStuff(2, '#').Await();
+            yield return MakeStuff(2, '#').Await<int>();
 
-            yield return MakeStuff(22, '?').Until(() => readyforwork).Background();
+            yield return MakeStuff(22, '?').Until(() => readyforwork).Background<int>();
 
-            yield return MakeStuff(4, '@').Await();
+            yield return MakeStuff(4, '@').Await<int>();
 
             cancel = true;
 
-            yield return MakeStuff(6, '!').Await();
+            yield return MakeStuff(6, '!').Await<int>();
 
             readyforwork = true;
 
@@ -109,7 +109,7 @@ namespace StripeSample
             yield break;
         }
 
-        private IEnumerable<StreamStateReturn<int>> ReturnNumbers()
+        private IEnumerable<StreamState> ReturnNumbers()
         {
             var rnd = new Random();
             while (true)
