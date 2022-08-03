@@ -10,7 +10,7 @@ The Unity game engine also makes use of Co-Routines by calling the StartCoroutin
 
  - **Error handling**. Using *ResumeOnError*, *RestartOnError*, *ExitOnError* and setting a custom *ErrorHandler*
  - **Scope Isolation**. Each function in StreamThreads has is own scope of background coroutines and error handlers that go out of scope when the function exits
- - **Return values**. By adding and output variable in *Await(out var returnvar)* or *Background(out var retval)*, and *using yield return Return("some return value")* it is possible to return results from coroutines.
+ - **Return values**. By adding an output variable in *Await(out var returnvar)* or *Background(out var retval)*, and *using yield return Return("some return value")* it is possible to return results from coroutines.
  - **Generics**. StreamThreads provides generic versions for *IEnumerable<T\>*, such as *Await<T\>()* and *Background<T\>(out T retval)*.
  - **Chaining**. Because StreamThreads is based on extension methods, it uses IEnumerable chaining. An example could be *DoSomething().Until(()=>flag==true).ResumeOnError().Await()*
 
