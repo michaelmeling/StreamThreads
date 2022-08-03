@@ -52,6 +52,7 @@ namespace StreamThreads
     }
     public class IteratorReturnVariable<T> : IteratorReturnVariable, IIteratorReturnVariable<T>
     {
+        public static implicit operator T(IteratorReturnVariable<T> me) => me.HasValue() ? me.Value : default;
     }
 
 }
