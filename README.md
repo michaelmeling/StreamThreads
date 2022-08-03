@@ -6,7 +6,7 @@ Project URL: https://github.com/michaelmeling/StreamThreads
 StreamThreads is a coroutine library that allows you to write clean and plain code that can execute processes in parallel, but using only a single thread. It is an alternative to async/await and Task.Run(), but without locks, concurrent collections and synchronization. In some sense, it is more like a game-loop where each object in the scene needs updating every few milliseconds before the screen refreshes. Unfortunately, game-loops often end up with significant amounts of global status variables and case-statements in complex scenes. StreamThreads helps by allowing a game-loop to be written as a "multi-threaded" application, where each function is executing independently.
 
 ### Difference from Unity Co-Routines
-The Unity game engine also makes use of Co-Routines by caling the StartCoroutine() method, and StreamThreads basically provides the same functionality, albeit using a slightly different syntax.
+The Unity game engine also makes use of Co-Routines by calling the StartCoroutine() method, and StreamThreads basically provides the same functionality, albeit using a slightly different syntax.
 
  - **Error handling**. Using *ResumeOnError*, *RestartOnError*, *ExitOnError* and setting a custom *ErrorHandler*
  - **Scope Isolation**. Each function in StreamThreads has is own scope of background coroutines and error handlers that go out of scope when the function exits
