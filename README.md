@@ -1,3 +1,4 @@
+
 # StreamThreads
 **Single Threaded Recursive Iterators for Parallel Execution**
 
@@ -5,6 +6,18 @@ Project URL: https://github.com/michaelmeling/StreamThreads
 ## Introduction
 StreamThreads is a coroutine library that allows you to write clean and plain code that can execute processes in parallel, but using only a single thread. It is an alternative to async/await and Task.Run(), but without locks, concurrent collections and synchronization. In some sense, it is more like a game-loop where each object in the scene needs updating every few milliseconds before the screen refreshes. Unfortunately, game-loops often end up with significant amounts of global status variables and case-statements in complex scenes. StreamThreads helps by allowing a game-loop to be written as a "multi-threaded" application, where each function is executing independently.
 
+### When to use Co-Routines instead of async/await and Task.Run
+There are many ways to run tasks in parallel, and co-routines is just one of them. Each have their own strengths and weaknesses and choosing the right technology can simplify the structure of the code.
+
+**Co-routines** work well in scenarios with lots of small parallel tasks working on shared data.
+ - **use cases**: games, robotics,  industrial automation, animated user interfaces and communications
+
+**Async/Await** was originally invented to allow single threaded user interfaces to process long duration tasks without "hanging" by blocking the main GUI thread. If GUIs were multi-threaded, async would not be needed. 
+ - **use cases**: WPF, Windows Forms, communications, web pages
+
+**Task** object is used to run a background thread and can be used with Async/Await. However, this often requires various locking mechanisms to synchronize access to shared data. For this reason, Task is mostly used for code modules that are decoupled and rarely interact.
+ - **use cases**: Servers, data crunching, performance
+ 
 ### Difference from Unity Co-Routines
 The Unity game engine also makes use of Co-Routines by calling the StartCoroutine() method, and StreamThreads basically provides the same functionality, albeit using a slightly different syntax.
 
