@@ -125,7 +125,7 @@
                                 {
                                     if (item.BackgroundLoop.Loop())
                                     {
-                                        BackgroundThreads.RemoveAt(i);
+                                        BackgroundThreads.RemoveAt(i--);
                                     }
                                 }
                             }
