@@ -16,7 +16,7 @@ namespace StreamThreads
         {
             get
             {
-                var now = DateTime.Now;
+                DateTime now = DateTime.Now;
                 return (now - (_lastrun ?? now)).TotalSeconds;
             }
             set
@@ -29,7 +29,7 @@ namespace StreamThreads
         {
             if (condition()) yield break;
 
-            foreach (var item in me)
+            foreach (StreamState item in me)
             {
                 yield return item;
 
@@ -38,7 +38,7 @@ namespace StreamThreads
         }
         public static IEnumerable<StreamState> While(this IEnumerable<StreamState> me, Predicate condition)
         {
-            var itr = me.GetEnumerator();
+            IEnumerator<StreamState> itr = me.GetEnumerator();
             while (true)
             {
                 if (!condition())
@@ -54,7 +54,7 @@ namespace StreamThreads
         }
         public static IEnumerable<StreamState> ExitOnError(this IEnumerable<StreamState> me)
         {
-            var itr = me.GetEnumerator();
+            IEnumerator<StreamState> itr = me.GetEnumerator();
             while (true)
             {
                 try
@@ -73,7 +73,7 @@ namespace StreamThreads
         }
         public static IEnumerable<StreamState> ResumeOnError(this IEnumerable<StreamState> me)
         {
-            var itr = me.GetEnumerator();
+            IEnumerator<StreamState> itr = me.GetEnumerator();
             while (true)
             {
                 try
@@ -88,7 +88,7 @@ namespace StreamThreads
         public static IEnumerable<StreamState> RestartOnError(this IEnumerable<StreamState> me)
         {
             int maxretries = 1;
-            var itr = me.GetEnumerator();
+            IEnumerator<StreamState> itr = me.GetEnumerator();
             while (true)
             {
                 try
@@ -140,13 +140,13 @@ namespace StreamThreads
         
         public static StreamState Sleep(int millis)
         {
-            var t = DateTime.Now + TimeSpan.FromMilliseconds(millis);
+            DateTime t = DateTime.Now + TimeSpan.FromMilliseconds(millis);
 
             return new StreamStateLambda(() => DateTime.Now > t);
         }
         public static StreamState<T> Sleep<T>(int millis)
         {
-            var t = DateTime.Now + TimeSpan.FromMilliseconds(millis);
+            DateTime t = DateTime.Now + TimeSpan.FromMilliseconds(millis);
 
             return new StreamStateLambda<T>(() => DateTime.Now > t);
         }

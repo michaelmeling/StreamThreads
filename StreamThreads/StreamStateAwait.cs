@@ -52,7 +52,7 @@
                     {
                         Iterator.Current?.Terminate();
 
-                        foreach (var item in BackgroundThreads)
+                        foreach (BackgroundState item in BackgroundThreads)
                         {
                             item.BackgroundLoop?.Terminate();
                         }
@@ -74,7 +74,7 @@
                             continue;
 
                         case StateTypes.Switch:
-                            var sm = new BackgroundState()
+                            BackgroundState sm = new BackgroundState()
                             {
                                 SwitchState = true,
                                 SwitchFunction = ((StreamStateSwitch)Iterator.Current).OnSwitch.GetEnumerator(),
@@ -84,7 +84,7 @@
                             continue;
 
                         case StateTypes.Background:
-                            var bgs = new BackgroundState()
+                            BackgroundState bgs = new BackgroundState()
                             {
                                 BackgroundLoop = ((StreamStateBackground)Iterator.Current).Background,
                                 Lambda = ((StreamStateBackground)Iterator.Current).Lambda
@@ -106,7 +106,7 @@
 
                     for (int i = 0; i < BackgroundThreads.Count; i++)
                     {
-                        var item = BackgroundThreads[i];
+                        BackgroundState item = BackgroundThreads[i];
                         try
                         {
                             if (!item.Enabled) continue;
@@ -161,7 +161,7 @@
         }
         public void Terminate()
         {
-            foreach (var item in BackgroundThreads)
+            foreach (BackgroundState item in BackgroundThreads)
             {
                 item.BackgroundLoop?.Terminate();
             }
